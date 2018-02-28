@@ -43,12 +43,51 @@ class bear_handlers{
             $("#room_members_div").empty();
             for(let user_id in members){
                 $("#room_members_div").append(
-                    '<div class="avatar" >' +
+                    '<div class="avatar" id="member_' + user_id + '">' +
                     '<img width="48" height="48" src="'+members[user_id].avatar+'" onerror="javascript:this.src=\'https://web.runningdoctor.cn/images/defaultHead.png\'"</img>' +
                     '<div class="avatar_name">'+ members[user_id].nickname +'</div>' +
                     '</div>'
                 );
             }
+        }
+    }
+
+    quit_room_handler(data){
+        let target_id = data.target_id;
+        if(target_id == window.current_room_id){
+            $("#chat_div").hide(1000);
+            $("#room_div").show(1000);
+            window.current_room_id = "";
+        }
+        $("#room_"+target_id).remove();
+    }
+
+    join_room_handler(data){
+        let user_id = this._client.get_user_id();
+        let room_name = data.room_name;
+        let target_id = data.target_id;
+        let user_info = data.user_info;
+        let members_div_display = $("#room_members_div").css("display");
+        if(target_id == window.current_room_id && members_div_display != "none"){
+            $("#room_members_div").append(
+                '<div class="avatar" id="member_' + user_info.user_id + '">' +
+                '<img width="48" height="48" src="'+user_info.avatar+'" onerror="javascript:this.src=\'https://web.runningdoctor.cn/images/defaultHead.png\'"</img>' +
+                '<div class="avatar_name">'+ user_info.nickname +'</div>' +
+                '</div>'
+            );
+        }
+        if(user_info.user_id == user_id){
+            $("#room_list").append('<li class=\"list-group-item\" id=\"'+'room_'+target_id +'\" onclick=\"bind_method(\'room\',\''+ target_id+'\',\''+ room_name+'\')\"><span id=\"'+ target_id +'_unread\" class=\"badge\">'+ 0 +'</span>'+ room_name +'</li>')
+        }
+    }
+
+    leave_room_handler(data){
+        let target_id = data.target_id;
+        let user_info = data.user_info;
+        let room_name = data.room_name;
+        let members_div_display = $("#room_members_div").css("display");
+        if(target_id == window.current_room_id && members_div_display != "none"){
+            $("#member_"+user_info.user_id).remove();
         }
     }
 

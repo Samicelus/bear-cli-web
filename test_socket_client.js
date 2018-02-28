@@ -199,6 +199,8 @@ $("#show_invite_people").click(()=>{
     let members_div_display = $("#room_members_div").css("display");
     if(members_div_display == "none"){
         $("#invite_div").css("top","47px");
+    }else{
+        $("#invite_div").css("top","114px");
     }
     $("#invite_div").show(1000);
 });
@@ -257,6 +259,8 @@ $("#show_room_members").click(()=>{
         let invite_div_display = $("#invite_div").css("display");
         if(invite_div_display != "none"){
             $("#invite_div").css("top","114px");
+        }else{
+            $("#invite_div").css("top","47px");
         }
         $("#room_members_div").show(1000);
     }).catch((e)=>{
@@ -267,4 +271,11 @@ $("#show_room_members").click(()=>{
 $("#hide_room_members").click(()=>{
     $("#room_members_div").hide(1000);
     $("#invite_div").hide(1000);
+});
+
+$("#leave_room").click(()=>{
+    let send_data = {
+        room_id: current_room_id
+    }
+    bear.request("chat.chat_handler.quitRoom",send_data);
 });
