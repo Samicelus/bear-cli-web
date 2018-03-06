@@ -24,6 +24,8 @@ $("#log_button").click(()=>{
         console.log(`login ret:`,ret);
         $("#login_dep").hide(1000);
         $("#chat_dep").show(1000);
+        $("#get_my_rooms").show(1000);
+        $("#get_my_dedicate_room").hide(1000);
     }).catch((e)=>{
         console.log(e.stack||e);
     })
@@ -39,6 +41,8 @@ $("#log_outside").click(()=>{
         console.log(`login ret:`,ret);
         $("#login_dep").hide(1000);
         $("#chat_dep").show(1000);
+        $("#get_my_rooms").hide(1000);
+        $("#get_my_dedicate_room").show(1000);
     }).catch((e)=>{
         console.log(e.stack||e);
     })
@@ -238,7 +242,14 @@ $("#get_my_rooms").click(()=>{
                 $("#room_list").empty();
                 if(rooms){
                     rooms.forEach((room)=>{
-                        $("#room_list").append('<li class=\"list-group-item\" id=\"'+'room_'+room._id +'\" onclick=\"bind_method(\'room\',\''+ room._id+'\',\''+ room.room_name+'\')\"><span id=\"'+ room._id +'_unread\" class=\"badge\">'+ room.unread +'</span>'+ room.room_name +'</li>')
+                        $("#room_list").append('<li class=\"list-group-item\" id=\"'+'room_'+room._id +'\" onclick=\"bind_method(\'room\',\''+ room._id+'\',\''+ room.room_name+'\')\"><span id=\"'+ room._id +'_unread\" class=\"badge\">'+ room.unread +'</span><div class="room_list_name" id="room_name_'+room._id+'">'+ room.room_name +'</div><div class="last_log" id="last_log_'+room._id+'"></div></li>')
+                        let last_log_obj = room.last_log;
+                        let from = last_log_obj.from;
+                        let type = last_log_obj.type;
+                        let content = last_log_obj.content;
+                        let time = last_log_obj.created;
+                        let last_log = `${time}  ${type=="system"?"系统":from.nickname}:  ${type == "system"?content:""}${type == "text"?content:""}${type == "image"?"发来了一张图片":""}${type == "voice"?"发来了一条语音":""}${type == "video"?"发来了一个视频":""}`;
+                        $("#last_log_"+room._id).html(last_log);
                     })
                 }
             }
@@ -256,9 +267,16 @@ $("#get_my_dedicate_room").click(()=>{
             success: (data_received, status)=>{
                 console.log(`getMyRooms:`,data_received);
                 let room = data_received.data.room;
+                let last_log_obj = room.last_log;
+                let from = last_log_obj.from;
+                let type = last_log_obj.type;
+                let content = last_log_obj.content;
+                let time = last_log_obj.created;
                 $("#room_list").empty();
-                    $("#room_list").append('<li class=\"list-group-item\" id=\"'+'room_'+room._id +'\" onclick=\"bind_method(\'room\',\''+ room._id+'\',\''+ room.room_name+'\')\"><span id=\"'+ room._id +'_unread\" class=\"badge\">'+ room.unread +'</span>'+ room.room_name +'</li>')
-                }
+                $("#room_list").append('<li class=\"list-group-item\" id=\"'+'room_'+room._id +'\" onclick=\"bind_method(\'room\',\''+ room._id+'\',\''+ room.room_name+'\')\"><span id=\"'+ room._id +'_unread\" class=\"badge\">'+ room.unread +'</span><div class="room_list_name" id="room_name_'+ room.id +'">'+ room.room_name +'</div><div class="last_log" id="last_log_'+room._id+'"></div></li>')
+                let last_log = `${time}  ${type=="system"?"系统":from.nickname}:  ${type == "system"?content:""}${type == "text"?content:""}${type == "image"?"发来了一张图片":""}${type == "voice"?"发来了一条语音":""}${type == "video"?"发来了一个视频":""}`;
+                $("#last_log_"+room._id).html(last_log);
+            }
         }
     )
 });

@@ -30,7 +30,7 @@ class bear_handlers{
     room_name_change_handler(data){
         let new_room_name = data.new_room_name;
         let target_id = data.target_id;
-        $("#room_"+target_id).html(new_room_name);
+        $("#room_name_"+target_id).html(new_room_name);
         if(target_id == window.current_room_id){
             $("#room_name").val(new_room_name);
         }
@@ -70,6 +70,7 @@ class bear_handlers{
         let room_name = data.room_name;
         let target_id = data.target_id;
         let user_infos = data.user_infos;
+        let time = data.time;
         let members_div_display = $("#room_members_div").css("display");
         user_infos.forEach((user_info)=>{
             if(target_id == window.current_room_id && members_div_display != "none"){
@@ -82,7 +83,7 @@ class bear_handlers{
                 );
             }
             if(user_info.user_id == user_id){
-                $("#room_list").append('<li class=\"list-group-item\" id=\"'+'room_'+target_id +'\" onclick=\"bind_method(\'room\',\''+ target_id+'\',\''+ room_name+'\')\"><span id=\"'+ target_id +'_unread\" class=\"badge\">'+ 0 +'</span>'+ room_name +'</li>')
+                $("#room_list").append('<li class=\"list-group-item\" id=\"'+'room_'+target_id +'\" onclick=\"bind_method(\'room\',\''+ target_id+'\',\''+ room_name+'\')\"><span id=\"'+ target_id +'_unread\" class=\"badge\">'+ 0 +'</span><div class="room_list_name" id="room_name_'+target_id+'">'+ room_name +'</div><div class="last_log" id="last_log_'+target_id+'">'+ time +'  系统:  你加入了群聊</div></li>')
             }
         })
     }
@@ -170,6 +171,8 @@ class bear_handlers{
             let current_unread = Number($("#"+target_id+"_unread").html());
             let new_unread = current_unread + 1;
             $("#"+target_id+"_unread").html(new_unread.toString());
+            let last_log = `${time}  ${type=="system"?"系统":from.nickname}:  ${type == "system"?content:""}${type == "text"?content:""}${type == "image"?"发来了一张图片":""}${type == "voice"?"发来了一条语音":""}${type == "video"?"发来了一个视频":""}`;
+            $("#last_log_"+target_id).html(last_log);
         }
     }
 }
