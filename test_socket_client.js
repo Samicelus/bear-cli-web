@@ -1,7 +1,7 @@
 window.route_map = {};
 let app_id = "5a7a6b4439d9032daa77f861";
-let port = 13020;
-let remoteIP = "testapi.runningdoctor.cn";
+let port = 3020;
+let remoteIP = "www.xxx.com";
 let jwt = "";
 let openid = "";
 //let jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ0c2IiLCJqdGkiOiI2ODllNTlmN2JjZTgwNGEyZDg3Njg1ODlkM2Q2NDNlZiIsImlhdCI6MTUxNjY3MjI1Mi45MzcsImV4cCI6MTUxOTI2NDI1Mi45Mzd9.aX8rCquTcCslzEzS1SZiHAv2PIgMYZh7y8zfFtAV4Fo";
@@ -82,7 +82,7 @@ window.sendMediaToRoom = function(){
     }
     $.ajax({
         type: 'post',
-        url: 'http://testapi.runningdoctor.cn/12133/uploadFiles',
+        url: 'http://www.xxx.com/12133/uploadFiles',
         data: fd,
         cache: false,
         contentType: false,// 当有文件要上传时，此项是必须的，否则后台无法识别文件流的起始位置(详见：#1)
@@ -261,7 +261,7 @@ $("#get_my_dedicate_room").click(()=>{
     let user_id = bear.get_user_id();
     $.ajax(
         {
-            url: "http://testapi.runningdoctor.cn/12133/getMyDedicateRoom",
+            url: "http://www.xxx.com/12133/getMyDedicateRoom",
             type:"post",
             data:{user_id: user_id},
             success: (data_received, status)=>{
