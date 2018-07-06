@@ -1,5 +1,4 @@
 class crypto{
-
     constructor(){
     }
 
@@ -184,7 +183,6 @@ class ajax{
             }
         })
     }
-
 }
 
 
@@ -206,12 +204,17 @@ class bear_cli{
         });
         this._socket.on('connect',function(data){
             console.log('user','连接成功')
-        })
+            that.isConnect = true;
+            let route = "user.user_handler.reconnectAlive";
+            return that.request(route, {});
+        });
         this._socket.on('connect_failed', function (data) {
             console.log('user','连接失败')
+            that.isConnect = false
         })
         this._socket.on('disconnect', function (data) {
             console.log('user','断开连接')
+            that.isConnect = false
         })
         this._socket.on('reconnecting', function (data) {
             console.log('user','正在重连')
@@ -234,37 +237,12 @@ class bear_cli{
             console.log('user','anything')
         })
 
-
         this._app_socket = {};
         this._out_id = "";
         this._user_id = "";
         this._token = "";
         this._app_id = app_id;
         this._handlers = {};
-        this._jwt = "";
-        this._expire = 0;
-    }
-
-    reset_expire(){
-        this._expire = 0;
-    }
-
-    async set_jwt(jwt){
-        this._jwt = jwt;
-        return true;
-    }
-
-    async set_out_id(out_id){
-        this._out_id = out_id;
-        return true;
-    }
-
-    get_jwt(){
-        return this._jwt;
-    }
-
-    get_out_id(){
-        return this._out_id;
     }
 
     get_user_id(){
@@ -282,76 +260,21 @@ class bear_cli{
         return true;
     }
 
-    async relog(){
+    async login(params){
         let that = this;
         let url = "http://" + this._host;
-        if(this._jwt){
-            let jwt = this._jwt;
-            return this._ajax.post({},url+"/12133/reloginUser",{"x-json-web-token":jwt}).then((data_received)=>{
-                console.log("relog_ret:",data_received);
-                that._expire = data_received.data.expire_timestamp;
-                return true;
-            }).catch((e)=>{
-                throw e;
-            })
-        }else if(this._out_id){
-            let that = this;
-            let out_id = this._out_id;
-            let send_data = {out_id:out_id};
-            send_data.sign = this._crypto.sha1(generateSign(send_data, "xklunkjdd"));
-            console.log("send_data:",send_data);
-            let headers = {
-                "Content-Type": "application/x-www-form-urlencoded"
-            };
-            return this._ajax.post(send_data,url+"/12133/reloginOutside", headers).then((data_received)=>{
-                console.log("relog_ret:",data_received);
-                that._expire = data_received.data.expire_timestamp;
-                return true;
-            }).catch((e)=>{
-                throw e;
-            })
-        }else{
-            throw new Error(`no loggin params set!`);
-        }
-    }
-
-    async login(){
-        let that = this;
-        let url = "http://" + this._host;
-        if(this._jwt){
-            let jwt = this._jwt;
-            return this._ajax.post({},url+"/12133/loginUser",{"x-json-web-token": jwt}).then((data_received)=>{
-                console.log("log_ret:",data_received);
-                that._user_id = data_received.data.user_id;
-                that._token = data_received.data.token;
-                that._expire = data_received.data.expire_timestamp;
-                let route = "user.user_handler.login";
-                return that.request(route, {});
-            }).catch((e)=>{
-                throw e;
-            });
-        }else if(this._out_id){
-            let that = this;
-            let out_id = this._out_id;
-            let send_data = {out_id:out_id};
-            send_data.sign = this._crypto.sha1(generateSign(send_data, "xklunkjdd"));
-            console.log("send_data:",send_data);
-            let headers = {
-                "Content-Type": "application/x-www-form-urlencoded"
-            };
-            return this._ajax.post(send_data, url+"/12133/loginOutside", headers).then((data_received)=>{
-                console.log("log_ret:",data_received);
-                that._user_id = data_received.data.user_id;
-                that._token = data_received.data.token;
-                that._expire = data_received.data.expire_timestamp;
-                let route = "user.user_handler.login";
-                return that.request(route, {});
-            }).catch((e)=>{
-                throw e;
-            })
-        }else{
-            throw new Error(`no loggin params set!`);
-        }
+        let headers = {
+            "Content-Type": "application/x-www-form-urlencoded"
+        };
+        return this._ajax.post(params, url+"/8833/login", headers).then((data_received)=>{
+            console.log("log_ret:",data_received);
+            that._user_id = data_received.data.user_id;
+            that._token = data_received.data.token;
+            let route = "user.user_handler.login";
+            return that.request(route, {});
+        }).catch((e)=>{
+            throw e;
+        })
     }
 
     set_handlers(handlers){
@@ -362,39 +285,18 @@ class bear_cli{
     async request(route, data){
         let that = this;
         let nowtimestamp = new Date().getTime();
-        if(this._expire < nowtimestamp){
-            return this.relog().then((ret)=>{
-                if(ret){
-                    console.log(`request:${route}`);
-                    let server_type = route.split('.')[0];
-                    console.log(`server_type:${server_type}`);
-                    let target_socket = server_type == "user"?that._socket:that._app_socket[server_type];
-                    let handler_name = route.split('.')[1];
-                    let method = route.split('.')[2];
-                    data.user_id = that._user_id;
-                    data.app_id = that._app_id;
-                    data.token = that._token;
-                    data.handler_name = handler_name;
-                    data.method = method;
-                    return Promise.resolve(target_socket.send(data));
-                }
-            }).catch((e)=>{
-                throw e;
-            })
-        }else{
-            console.log(`request:${route}`);
-            let server_type = route.split('.')[0];
-            console.log(`server_type:${server_type}`);
-            let target_socket = server_type == "user"?this._socket:this._app_socket[server_type];
-            let handler_name = route.split('.')[1];
-            let method = route.split('.')[2];
-            data.user_id = this._user_id;
-            data.app_id = this._app_id;
-            data.token = this._token;
-            data.handler_name = handler_name;
-            data.method = method;
-            return Promise.resolve(target_socket.send(data));
-        }
+        console.log(`request:${route}`);
+        let server_type = route.split('.')[0];
+        console.log(`server_type:${server_type}`);
+        let target_socket = server_type == "user"?this._socket:this._app_socket[server_type];
+        let handler_name = route.split('.')[1];
+        let method = route.split('.')[2];
+        data.user_id = this._user_id;
+        data.app_id = this._app_id;
+        data.token = this._token;
+        data.handler_name = handler_name;
+        data.method = method;
+        return Promise.resolve(target_socket.send(data));
     }
 
     set_app_socket(server_type, host, port){
@@ -406,41 +308,39 @@ class bear_cli{
         let that = this;
         this._app_socket[server_type].on('message', function (data) {
             console.log(`\n[${server_type} socket] recieve data:`,data);
+            that.isConnect = true;
             let handler_name = `${data.handler_name}_handler`;
             if(that._handlers&&that._handlers[handler_name]){
                 that._handlers[handler_name](data);
             }
-        });
-        this._socket.on('connect',function(data){
-            console.log(server_type,'连接成功')
-            let route = `${server_type}.${server_type}_handler.reconnectAlive`;
-            return that.request(route, {});
         })
         this._app_socket[server_type].on('connect_failed', function (data) {
-            console.log(server_type,'连接失败')
+            console.log("chat",'连接失败')
+            that.isConnect = false
         })
         this._app_socket[server_type].on('disconnect', function (data) {
-            console.log(server_type,'断开连接')
+            console.log("chat",'断开连接')
+            that.isConnect = false
         })
         this._app_socket[server_type].on('reconnecting', function (data) {
-            console.log(server_type,'正在重连')
-            let route = `${server_type}.${server_type}_handler.reconnectAlive`;
+            console.log("chat",'正在重连')
+            let route = "chat.chat_handler.reconnectAlive";
             return that.request(route, {});
         })
         this._app_socket[server_type].on('connecting', function (data) {
-            console.log(server_type,'正在连接')
+            console.log("chat",'正在连接')
         })
         this._app_socket[server_type].on('connect_failed', function (data) {
-            console.log(server_type,'重连失败')
+            console.log("chat",'重连失败')
         })
         this._app_socket[server_type].on('error', function (data) {
-            console.log(server_type,'error')
+            console.log("chat",'error')
         })
         this._app_socket[server_type].on('reconnect', function (data) {
-            console.log(server_type,'重连成功')
+            console.log("chat",'重连成功')
         })
         this._app_socket[server_type].on('anything', function (data) {
-            console.log(server_type,'anything')
+            console.log("chat",'anything')
         })
 
     }
